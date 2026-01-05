@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -38,27 +38,6 @@ export default function FavoritesPage() {
 
   const categories = ['all', 'Vehicles', 'Property', 'Mobiles', 'Electronics', 'Fashion', 'Gaming', 'Sports'];
 
-  useEffect(() => {
-    // Removed authentication redirect - page accessible without login
-    // if (!isAuthenticated) {
-    //   router.push('/login');
-    //   return;
-    // }
-
-    if (isAuthenticated) {
-      fetchFavorites();
-      
-      // Auto-refresh every 30 seconds
-      const interval = setInterval(() => {
-        fetchFavorites();
-      }, 30000);
-
-      return () => clearInterval(interval);
-    } else {
-      setLoading(false);
-    }
-  }, [isAuthenticated, fetchFavorites]);
-
   const fetchFavorites = useCallback(async () => {
     if (!isAuthenticated) {
       setLoading(false);
@@ -90,6 +69,27 @@ export default function FavoritesPage() {
       setRefreshing(false);
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
+
+    if (isAuthenticated) {
+      fetchFavorites();
+      
+      // Auto-refresh every 30 seconds
+      const interval = setInterval(() => {
+        fetchFavorites();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, fetchFavorites]);
 
   const handleRefresh = async () => {
     setRefreshing(true);

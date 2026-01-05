@@ -32,6 +32,31 @@ export default function WalletPage() {
   const minWithdrawPoints = 500;
   const minWithdrawPKR = (minWithdrawPoints * rate).toFixed(2);
 
+  const fetchData = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const [pointsRes, withdrawalsRes] = await Promise.all([
+        loyaltyApi.getPoints(),
+        walletApi.getRecentWithdrawals().catch(() => ({ data: { withdrawals: [] } })),
+      ]);
+
+      setPoints({
+        total: pointsRes.data?.total || 0,
+        available: pointsRes.data?.available || pointsRes.data?.availablePoints || 0,
+      });
+
+      setRecentWithdrawals(withdrawalsRes.data?.withdrawals || withdrawalsRes.data || []);
+    } catch (error) {
+      toast.error('Failed to load wallet data');
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     // Removed authentication redirect - page accessible without login
     // if (!isAuthenticated) {
@@ -72,31 +97,6 @@ export default function WalletPage() {
     }, 3500);
     return () => clearInterval(interval);
   }, [recentWithdrawals, featureIndex]);
-
-  const fetchData = useCallback(async () => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
-    try {
-      setLoading(true);
-      const [pointsRes, withdrawalsRes] = await Promise.all([
-        loyaltyApi.getPoints(),
-        walletApi.getRecentWithdrawals().catch(() => ({ data: { withdrawals: [] } })),
-      ]);
-
-      setPoints({
-        total: pointsRes.data?.total || 0,
-        available: pointsRes.data?.available || pointsRes.data?.availablePoints || 0,
-      });
-
-      setRecentWithdrawals(withdrawalsRes.data?.withdrawals || withdrawalsRes.data || []);
-    } catch (error) {
-      toast.error('Failed to load wallet data');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleWithdraw = async (method: string) => {
     if (points.available < minWithdrawPoints) {

@@ -31,31 +31,6 @@ export default function MyAdsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'Active' | 'Pending' | 'Rejected' | 'Sold' | 'All'>('Active');
 
-  useEffect(() => {
-    // Removed authentication redirect - page accessible without login
-    // if (!isAuthenticated) {
-    //   router.push('/login');
-    //   return;
-    // }
-
-    let interval: NodeJS.Timeout;
-    
-    if (isAuthenticated) {
-      fetchAds();
-      
-      // Auto-refresh every 30 seconds
-      interval = setInterval(() => {
-        fetchAds();
-      }, 30000);
-    } else {
-      setLoading(false);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isAuthenticated, fetchAds]);
-
   const fetchAds = useCallback(async () => {
     try {
       if (!isAuthenticated) {
