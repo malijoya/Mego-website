@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin, Download, Award, TrendingUp, Users, Shield } from 'lucide-react';
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
+  // Use static year to avoid hydration mismatch
+  const currentYear = 2024;
   
   return (
-    <footer className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-black text-gray-300 mt-20 overflow-hidden">
+    <footer className="relative bg-gradient-to-b from-gray-900 via-gray-900 to-black dark:from-gray-950 dark:via-gray-900 dark:to-black text-gray-300 dark:text-gray-400 mt-20 overflow-hidden">
       {/* Decorative gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-primary-900/20 to-transparent pointer-events-none"></div>
       
@@ -17,7 +18,7 @@ export function Footer() {
           <div>
             <h3 className="text-white font-bold text-lg mb-4">About MEGO</h3>
             <p className="text-sm mb-4">
-              Pakistan's premier online marketplace for buying and selling goods. Trusted, secure, and rewarding.
+              Pakistan&apos;s premier online marketplace for buying and selling goods. Trusted, secure, and rewarding.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="hover:text-primary-400 transition-colors">
@@ -112,7 +113,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} MEGO. All rights reserved.</p>
+          <p>&copy; {currentYear} MEGO. All rights reserved.</p>
         </div>
       </div>
     </footer>

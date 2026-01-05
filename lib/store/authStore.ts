@@ -13,6 +13,7 @@ interface User {
   notificationsEnabled?: boolean;
   coinsBalance?: number;
   verificationTier?: string;
+  language?: string;
 }
 
 interface AuthState {
@@ -34,13 +35,18 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== 'undefined') {
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(user));
+          // Set cookie for middleware authentication
+          document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
         }
+        // Immediately update state
         set({ user, token, isAuthenticated: true });
       },
       logout: () => {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          // Remove cookie
+          document.cookie = 'token=; path=/; max-age=0';
         }
         set({ user: null, token: null, isAuthenticated: false });
       },
@@ -51,7 +57,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'mego-auth',
-      skipHydration: true,
+      skipHydration: true, // Skip hydration to prevent mismatch errors
     }
   )
 );

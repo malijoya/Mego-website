@@ -24,12 +24,16 @@ export default function KycPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
 
     const fetchStatus = async () => {
+      if (!isAuthenticated) {
+        return;
+      }
       try {
         const response = await kycApi.getStatus();
         setStatus(response.data.status || 'not_submitted');
@@ -40,7 +44,7 @@ export default function KycPage() {
     };
 
     fetchStatus();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
   const handleImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -95,10 +99,6 @@ export default function KycPage() {
     }
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
-
   const getStatusComponent = () => {
     switch (status) {
       case 'pending':
@@ -111,7 +111,7 @@ export default function KycPage() {
                   KYC Verification Pending
                 </h3>
                 <p className="text-yellow-700 dark:text-yellow-300">
-                  Your KYC submission is under review. We'll notify you once it's processed.
+                  Your KYC submission is under review. We&apos;ll notify you once it&apos;s processed.
                 </p>
               </div>
             </div>
@@ -201,7 +201,7 @@ export default function KycPage() {
                           setCnicImage(null);
                           setCnicPreview(null);
                         }}
-                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                       >
                         Remove
                       </button>
@@ -250,7 +250,7 @@ export default function KycPage() {
                           setSelfieImage(null);
                           setSelfiePreview(null);
                         }}
-                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                        className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
                       >
                         Remove
                       </button>

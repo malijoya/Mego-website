@@ -22,15 +22,16 @@ export default function LanguagePage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
 
     // Load current language
     const currentLang = user?.language || 'en';
     setSelectedLanguage(currentLang);
-  }, [isAuthenticated, router, user]);
+  }, [isAuthenticated, user]);
 
   const handleLanguageChange = async (langCode: string) => {
     setSelectedLanguage(langCode);
@@ -49,9 +50,10 @@ export default function LanguagePage() {
     }
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+  // Removed authentication check - page accessible without login
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

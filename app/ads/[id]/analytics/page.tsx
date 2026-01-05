@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { adAnalyticsApi, adHistoryApi, adQualityApi, adsApi, getImageUrl } from '@/lib/api';
+import { Header } from '../../../../components/layout/Header';
+import { Footer } from '../../../../components/layout/Footer';
+import { adAnalyticsApi, adHistoryApi, adQualityApi, adsApi, getImageUrl } from '../../../../lib/api';
 import { Eye, MousePointerClick, Heart, Share2, TrendingUp, Clock, Star, BarChart3 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
@@ -57,7 +57,7 @@ export default function AdAnalyticsPage() {
     if (params.id) {
       fetchData();
     }
-  }, [params.id, router]);
+  }, [params.id]);
 
   const metrics = [
     { icon: Eye, label: 'Views', value: analytics?.views || 0, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900' },

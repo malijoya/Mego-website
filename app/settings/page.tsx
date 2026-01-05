@@ -35,13 +35,17 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
 
     // Load user settings
     const loadSettings = async () => {
+      if (!isAuthenticated) {
+        return;
+      }
       try {
         const response = await authApi.getProfile();
         const userData = response.data;
@@ -59,7 +63,7 @@ export default function SettingsPage() {
     };
 
     loadSettings();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
   const handleSettingsUpdate = async () => {
     try {
@@ -113,10 +117,6 @@ export default function SettingsPage() {
       toast.error('Failed to update privacy settings');
     }
   };
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

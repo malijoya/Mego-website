@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -33,20 +33,29 @@ export default function WalletPage() {
   const minWithdrawPKR = (minWithdrawPoints * rate).toFixed(2);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
+
+    let interval: NodeJS.Timeout;
+    
+    if (isAuthenticated) {
+      fetchData();
+      
+      // Auto-refresh every 2 minutes (reduced frequency for better performance)
+      interval = setInterval(() => {
+        fetchData();
+      }, 120000);
+    } else {
+      setLoading(false);
     }
 
-    fetchData();
-    
-    // Auto-refresh every 2 minutes (reduced frequency for better performance)
-    const interval = setInterval(() => {
-      fetchData();
-    }, 120000);
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAuthenticated, fetchData]);
 
   // Auto-scroll recent withdrawals carousel
   useEffect(() => {
@@ -64,7 +73,11 @@ export default function WalletPage() {
     return () => clearInterval(interval);
   }, [recentWithdrawals, featureIndex]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const [pointsRes, withdrawalsRes] = await Promise.all([

@@ -19,44 +19,67 @@ const queryClient = new QueryClient({
 });
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  const { setDarkMode } = useThemeStore();
+  const { darkMode, setDarkMode } = useThemeStore();
   const { user } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // Initialize theme after mount - client-side only
+    if (typeof window === 'undefined' || !mounted) return;
     
-    // Initialize theme after mount
-    if (typeof window !== 'undefined') {
-      try {
-        const savedTheme = localStorage.getItem('mego-theme');
-        if (savedTheme) {
-          const parsed = JSON.parse(savedTheme);
-          if (parsed.state?.darkMode !== undefined) {
+    // Only set if not already set by ThemeScript
+    const htmlHasDark = document.documentElement.classList.contains('dark');
+    
+    try {
+      const savedTheme = localStorage.getItem('mego-theme');
+      if (savedTheme) {
+        const parsed = JSON.parse(savedTheme);
+        if (parsed.state?.darkMode !== undefined) {
+          // Only update if different from current state
+          if (parsed.state.darkMode !== htmlHasDark) {
             setDarkMode(parsed.state.darkMode);
-            return;
           }
+          return;
         }
-      } catch (error) {
-        // Ignore parse errors
       }
-      
-      // Check system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } catch (error) {
+      // Ignore parse errors
+    }
+    
+    // Check system preference only if no saved theme
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark !== htmlHasDark) {
       setDarkMode(prefersDark);
     }
-  }, [setDarkMode]);
+  }, [mounted, setDarkMode]);
 
   // Sync user's dark mode preference
   useEffect(() => {
-    if (mounted && user?.darkMode !== undefined) {
+    if (typeof window === 'undefined' || !mounted) return;
+    if (user?.darkMode !== undefined) {
       setDarkMode(user.darkMode);
     }
-  }, [mounted, user, setDarkMode]);
+  }, [user, setDarkMode, mounted]);
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    if (typeof window === 'undefined' || !mounted) return;
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode, mounted]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <div suppressHydrationWarning>
+        {children}
+      </div>
     </QueryClientProvider>
   );
 }

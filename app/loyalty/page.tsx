@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -24,23 +24,11 @@ export default function LoyaltyPage() {
   const rate = 0.1; // 1 Point = PKR 0.10
   const balancePKR = (points.available * rate).toFixed(2);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!isAuthenticated) {
-      router.push('/login');
+      setLoading(false);
       return;
     }
-
-    fetchData();
-    
-    // Auto-refresh points every 2 minutes
-    const interval = setInterval(() => {
-      refreshPoints();
-    }, 120000);
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
-
-  const fetchData = async () => {
     try {
       setLoading(true);
       const [pointsRes, tasksRes, referralRes, statsRes] = await Promise.all([
@@ -71,7 +59,26 @@ export default function LoyaltyPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isAuthenticated) {
+      fetchData();
+      
+      // Auto-refresh points every 2 minutes
+      interval = setInterval(() => {
+        refreshPoints();
+      }, 120000);
+    } else {
+      setLoading(false);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAuthenticated, fetchData]);
 
   const handleSpin = async () => {
     try {
@@ -237,7 +244,7 @@ export default function LoyaltyPage() {
           <div className="flex items-center justify-center">
             <button
               onClick={handleSpin}
-              className="relative w-72 h-72 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl hover:scale-105 transition-transform shadow-2xl active:scale-95"
+              className="relative w-72 h-72 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold text-xl hover:scale-105 transition-transform shadow-2xl active:scale-95"
             >
               <div className="absolute inset-0 rounded-full border-8 border-white/30"></div>
               <div className="relative z-10 text-center">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -17,52 +17,59 @@ export default function ReferralCenterPage() {
   const [referralStats, setReferralStats] = useState({ total: 0, earned: 0, pending: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!isAuthenticated) {
-      router.push('/login');
+      setLoading(false);
       return;
     }
-
-    const fetchData = async () => {
-      try {
-        const [codeRes, statsRes] = await Promise.all([
-          loyaltyApi.getReferralCode().catch(async () => {
-            // If no code exists, generate one
-            const genRes = await loyaltyApi.generateReferralCode();
-            return { data: { code: genRes.data?.referralCode || '' } };
-          }),
-          loyaltyApi.getReferralStats(),
-        ]);
-
-        setReferralCode(codeRes.data?.code || '');
-        setReferralStats(statsRes.data || { total: 0, earned: 0, pending: 0 });
-      } catch (error) {
-        // Try to generate if fetch fails
-        try {
+    try {
+      const [codeRes, statsRes] = await Promise.all([
+        loyaltyApi.getReferralCode().catch(async () => {
+          // If no code exists, generate one
           const genRes = await loyaltyApi.generateReferralCode();
-          setReferralCode(genRes.data?.referralCode || '');
-        } catch (genError) {
-          toast.error('Failed to load referral data');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+          return { data: { code: genRes.data?.referralCode || '' } };
+        }),
+        loyaltyApi.getReferralStats(),
+      ]);
 
-    fetchData();
-    
-    // Auto-refresh stats every 2 minutes (reduced frequency for better performance)
-    const interval = setInterval(async () => {
+      setReferralCode(codeRes.data?.code || '');
+      setReferralStats(statsRes.data || { total: 0, earned: 0, pending: 0 });
+    } catch (error) {
+      // Try to generate if fetch fails
       try {
-        const statsRes = await loyaltyApi.getReferralStats();
-        setReferralStats(statsRes.data || { total: 0, earned: 0, pending: 0 });
-      } catch (error) {
-        // Ignore errors
+        const genRes = await loyaltyApi.generateReferralCode();
+        setReferralCode(genRes.data?.referralCode || '');
+      } catch (genError) {
+        toast.error('Failed to load referral data');
       }
-    }, 120000);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isAuthenticated) {
+      fetchData();
+      
+      // Auto-refresh stats every 2 minutes (reduced frequency for better performance)
+      interval = setInterval(async () => {
+        try {
+          const statsRes = await loyaltyApi.getReferralStats();
+          setReferralStats(statsRes.data || { total: 0, earned: 0, pending: 0 });
+        } catch (error) {
+          // Ignore errors
+        }
+      }, 120000);
+    } else {
+      fetchData(); // Still fetch to set loading to false
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAuthenticated, fetchData]);
 
   const handleCopyCode = () => {
     if (!referralCode) {

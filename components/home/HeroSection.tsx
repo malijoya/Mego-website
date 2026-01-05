@@ -8,6 +8,19 @@ import { useState, useEffect } from 'react';
 export function HeroSection() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
+  const [particles, setParticles] = useState<Array<{ left: string; top: string; delay: string; duration: string }>>([]);
+
+  useEffect(() => {
+    // Generate particles only on client side to avoid hydration mismatch
+    setParticles(
+      Array.from({ length: 20 }, () => ({
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        delay: `${Math.random() * 5}s`,
+        duration: `${5 + Math.random() * 5}s`,
+      }))
+    );
+  }, []);
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
@@ -18,7 +31,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative bg-gradient-to-br from-primary-600 via-primary-500 to-secondary-600 text-white py-24 md:py-32 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-primary-600 via-primary-500 to-secondary-600 text-white py-12 md:py-16 overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse-slow"></div>
@@ -31,21 +44,21 @@ export function HeroSection() {
           {/* Badge */}
           <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full mb-6 animate-fadeIn border border-white/20">
             <Sparkles className="w-4 h-4 text-yellow-300" />
-            <span className="text-sm font-semibold">Pakistan's #1 Marketplace</span>
+            <span className="text-sm font-semibold">Pakistan&apos;s #1 Marketplace</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-6 animate-fadeInUp leading-tight">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-4 animate-fadeInUp leading-tight">
             <span className="block">Buy • Sell •</span>
             <span className="block bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-100 bg-clip-text text-transparent animate-gradient">
               Connect
             </span>
           </h1>
-          <p className="text-xl md:text-2xl lg:text-3xl mb-10 text-gray-100 max-w-4xl mx-auto font-medium animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
+          <p className="text-lg md:text-xl lg:text-2xl mb-6 text-gray-100 max-w-4xl mx-auto font-medium animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
             Trusted marketplace with <span className="font-bold text-yellow-200">verified sellers</span>, secure transactions, and <span className="font-bold text-yellow-200">instant rewards</span>
           </p>
 
           {/* Enhanced Search Bar */}
-          <div className="max-w-3xl mx-auto mb-10 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
+          <div className="max-w-3xl mx-auto mb-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
             <div className="relative group">
               <div className="absolute inset-0 bg-white/20 rounded-2xl blur-xl group-hover:bg-white/30 transition-all"></div>
               <div className="relative bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20">
@@ -74,7 +87,7 @@ export function HeroSection() {
           </div>
 
           {/* Enhanced CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-12 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
+          {/* <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-12 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
             <Link
               href="/post-ad"
               className="group relative bg-white text-primary-600 px-10 py-5 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-all shadow-2xl hover:shadow-3xl flex items-center space-x-3 hover:scale-105 active:scale-95 overflow-hidden"
@@ -91,10 +104,10 @@ export function HeroSection() {
               <TrendingUp className="w-6 h-6" />
               <span>Browse 10,000+ Ads</span>
             </Link>
-          </div>
+          </div> */}
 
           {/* Enhanced Trust Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+          {/* <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
             <div className="flex items-center space-x-3 px-5 py-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 hover:bg-white/15 transition-all group">
               <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-lg shadow-green-400/50"></div>
               <Shield className="w-5 h-5 text-green-300 group-hover:scale-110 transition-transform" />
@@ -115,21 +128,21 @@ export function HeroSection() {
               <Sparkles className="w-5 h-5 text-purple-300 group-hover:scale-110 transition-transform" />
               <span className="font-semibold">24/7 Support</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 
       {/* Floating Particles Animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
+        {particles.map((particle, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 bg-white/20 rounded-full animate-float"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${5 + Math.random() * 5}s`,
+              left: particle.left,
+              top: particle.top,
+              animationDelay: particle.delay,
+              animationDuration: particle.duration,
             }}
           />
         ))}

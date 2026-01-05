@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { adsApi, getImageUrl, categoriesApi } from '@/lib/api';
-import { Search, Filter, MapPin, Eye, Heart, X } from 'lucide-react';
+import { adsApi, getImageUrl } from '@/lib/api';
+import { Search, Filter, MapPin, Eye, Heart } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -24,17 +24,9 @@ interface Ad {
   views?: number;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const [ads, setAds] = useState<Ad[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [filters, setFilters] = useState({
@@ -45,18 +37,6 @@ export default function SearchPage() {
     condition: '',
   });
   const [showFilters, setShowFilters] = useState(false);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await categoriesApi.getAll();
-        setCategories(response.data || []);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-      }
-    };
-    fetchCategories();
-  }, []);
 
   useEffect(() => {
     const fetchAds = async () => {
@@ -144,42 +124,17 @@ export default function SearchPage() {
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  const params = new URLSearchParams();
-                  if (searchQuery) params.set('q', searchQuery);
-                  if (filters.category) params.set('category', filters.category);
-                  router.push(`/search?${params.toString()}`);
-                }
-              }}
               placeholder="Search by title, location, category, description..."
-              className="w-full pl-12 pr-32 py-4 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all shadow-soft hover:shadow-medium"
+              className="w-full pl-12 pr-32 py-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  const params = new URLSearchParams();
-                  if (filters.category) params.set('category', filters.category);
-                  router.push(`/search?${params.toString()}`);
-                }}
-                className="absolute right-24 top-1/2 transform -translate-y-1/2 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-              >
-                <X className="w-4 h-4 text-gray-500" />
-              </button>
-            )}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                showFilters
-                  ? 'bg-primary-600 text-white hover:bg-primary-700'
-                  : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
-              }`}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
             >
               <Filter className="w-4 h-4" />
               <span>Filters</span>
@@ -201,11 +156,11 @@ export default function SearchPage() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
                 >
                   <option value="">All Categories</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name}>
-                      {cat.name}
-                    </option>
-                  ))}
+                  <option value="Vehicles">Vehicles</option>
+                  <option value="Property">Property</option>
+                  <option value="Mobiles">Mobiles</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Fashion">Fashion</option>
                 </select>
               </div>
               <div>
@@ -327,6 +282,18 @@ export default function SearchPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }
 

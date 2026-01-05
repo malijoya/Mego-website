@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { useAuthStore } from '@/lib/store/authStore';
-import { adsApi, getImageUrl } from '@/lib/api';
+import { Header } from '../../../../components/layout/Header';
+import { Footer } from '../../../../components/layout/Footer';
+import { useAuthStore } from '../../../../lib/store/authStore';
+import { adsApi, getImageUrl } from '../../../../lib/api';
 import toast from 'react-hot-toast';
 import { Upload, X, Mic, Play, Pause, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
@@ -41,18 +41,7 @@ export default function EditAdPage() {
   const [voiceRecording, setVoiceRecording] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    if (adId) {
-      fetchAd();
-    }
-  }, [isAuthenticated, router, adId]);
-
-  const fetchAd = async () => {
+  const fetchAd = useCallback(async () => {
     try {
       setLoading(true);
       const response = await adsApi.getById(parseInt(adId));
@@ -78,7 +67,18 @@ export default function EditAdPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [adId, router]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+
+    if (adId) {
+      fetchAd();
+    }
+  }, [isAuthenticated, router, adId, fetchAd]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -272,7 +272,7 @@ export default function EditAdPage() {
                 <button
                   type="button"
                   onClick={handleRemoveImage}
-                  className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                  className="absolute top-2 right-2 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700"
                 >
                   <X className="w-4 h-4" />
                 </button>

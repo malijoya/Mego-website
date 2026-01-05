@@ -27,9 +27,10 @@ export default function ForgotPasswordPage() {
 
     try {
       // Send password reset email
-      await authApi.sendEmailOtp({ email });
-      setSent(true);
-      toast.success('Password reset instructions sent to your email!');
+      // await authApi.sendEmailOtp({ email });
+      // setSent(true);
+      // toast.success('Password reset instructions sent to your email!');
+      toast.error('OTP feature is temporarily disabled');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to send reset email');
     } finally {
@@ -54,7 +55,7 @@ export default function ForgotPasswordPage() {
               Forgot Password?
             </h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              No worries! Enter your email and we'll send you reset instructions.
+              No worries! Enter your email and we&apos;ll send you reset instructions.
             </p>
           </div>
 
@@ -69,12 +70,12 @@ export default function ForgotPasswordPage() {
                     Check Your Email
                   </h3>
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    We've sent reset instructions to {email}
+                    We&apos;ve sent reset instructions to {email}
                   </p>
                 </div>
               </div>
               <p className="text-sm text-green-700 dark:text-green-300 mb-4">
-                Didn't receive the email? Check your spam folder or try again.
+                Didn&apos;t receive the email? Check your spam folder or try again.
               </p>
               <button
                 onClick={() => {

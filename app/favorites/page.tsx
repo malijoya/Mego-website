@@ -39,22 +39,31 @@ export default function FavoritesPage() {
   const categories = ['all', 'Vehicles', 'Property', 'Mobiles', 'Electronics', 'Fashion', 'Gaming', 'Sports'];
 
   useEffect(() => {
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
+
+    if (isAuthenticated) {
+      fetchFavorites();
+      
+      // Auto-refresh every 30 seconds
+      const interval = setInterval(() => {
+        fetchFavorites();
+      }, 30000);
+
+      return () => clearInterval(interval);
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, fetchFavorites]);
+
+  const fetchFavorites = useCallback(async () => {
     if (!isAuthenticated) {
-      router.push('/login');
+      setLoading(false);
       return;
     }
-
-    fetchFavorites();
-    
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchFavorites();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
-
-  const fetchFavorites = async () => {
     try {
       setLoading(true);
       const response = await favoritesApi.getAll();
@@ -80,7 +89,7 @@ export default function FavoritesPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [isAuthenticated]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -420,7 +429,7 @@ export default function FavoritesPage() {
                             handleRemove(favorite.ad.id);
                           }}
                           data-no-navigate
-                          className="ml-4 p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          className="ml-4 p-2 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-5 h-5" />
                         </button>

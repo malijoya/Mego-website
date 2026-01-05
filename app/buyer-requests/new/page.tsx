@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -25,10 +25,16 @@ export default function NewBuyerRequestPage() {
   });
   const [loading, setLoading] = useState(false);
 
-  if (!isAuthenticated) {
-    router.push('/login');
-    return null;
-  }
+  // Removed authentication redirect - page accessible without login
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     router.push('/login');
+  //   }
+  // }, [isAuthenticated, router]);
+
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +69,7 @@ export default function NewBuyerRequestPage() {
             Post Buyer Request
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Tell sellers what you're looking for
+            Tell sellers what you&apos;re looking for
           </p>
         </div>
 

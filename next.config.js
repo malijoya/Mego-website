@@ -1,17 +1,33 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  // Keep dev experience good but avoid extra overhead in production
+  reactStrictMode: false,
   
-  // Image optimization
+  // Image optimization - using remotePatterns (domains deprecated)
   images: {
-    domains: ['localhost', '192.168.0.106', '127.0.0.1'],
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: '**',
+        hostname: 'localhost',
+      },
+      {
+        protocol: 'http',
+        hostname: '192.168.0.106',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+      },
+      {
+        protocol: 'http',
+        hostname: '3.236.171.71',
       },
       {
         protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
         hostname: '**',
       },
     ],
@@ -36,14 +52,47 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
   
+  // Reduce bundle size in production by stripping most console logs
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
+  
   // Optimize fonts
   optimizeFonts: true,
   
   // Production source maps disabled for speed
   productionBrowserSourceMaps: false,
   
-  // Headers for caching
+  // Webpack alias for @/ imports + cache fixes
+  webpack: (config, { dev, isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname),
+    };
+    
+    // Fix webpack cache issues in dev mode
+    if (dev) {
+      config.cache = false; // Disable cache to avoid module loading issues
+    }
+    
+    // Ensure proper module resolution
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
+    
+    return config;
+  },
+  
+  // Headers for caching (skip _next static files in dev)
   async headers() {
+    // Don't apply cache headers in development to avoid 404 issues
+    if (process.env.NODE_ENV === 'development') {
+      return [];
+    }
+    
     return [
       {
         source: '/:path*',
@@ -67,7 +116,8 @@ const nextConfig = {
   },
   
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://52.0.49.49',
+    // Default to deployed backend URL; can be overridden via environment variable
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://3.236.171.71',
   },
 }
 

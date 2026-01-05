@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
@@ -10,7 +10,7 @@ import { useAuthStore } from '@/lib/store/authStore';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock, Phone } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuthStore();
@@ -20,26 +20,126 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    if (!formData.phone || !formData.password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await authApi.login(formData);
-      const { token, ...user } = response.data;
+      console.log('🔵 Login attempt:', {
+        url: `${process.env.NEXT_PUBLIC_API_URL || 'http://3.236.171.71'}/v1/auth/login`,
+        phone: formData.phone,
+      });
       
-      setAuth(user, token);
+      const response = await authApi.login(formData);
+      
+      console.log('🟢 Login response:', response);
+      console.log('🟢 Response data:', response?.data);
+      console.log('🟢 Response status:', response?.status);
+      
+      if (!response || !response.data) {
+        console.error('❌ No response data:', response);
+        toast.error('Invalid response from server');
+        setLoading(false);
+        return;
+      }
+      
+      // Handle different response formats
+      let token: string | null = null;
+      let user: any = null;
+      
+      // Try different response formats
+      if (response.data.token) {
+        // Format 1: { token: "...", ...user }
+        token = response.data.token;
+        const { token: _, ...userData } = response.data;
+        user = userData;
+      } else if (response.data.data?.token) {
+        // Format 2: { data: { token: "...", ...user } }
+        token = response.data.data.token;
+        const { token: _, ...userData } = response.data.data;
+        user = userData;
+      } else if (response.data.user && response.data.token) {
+        // Format 3: { user: {...}, token: "..." }
+        token = response.data.token;
+        user = response.data.user;
+      } else {
+        // Try to extract token from any nested structure
+        console.warn('⚠️ Unexpected response format, trying to extract token...');
+        token = response.data.token || response.data.accessToken || response.data.access_token || null;
+        user = response.data.user || response.data.data || response.data;
+      }
+      
+      if (!token) {
+        console.error('❌ No token found in response:', {
+          responseData: response.data,
+          keys: Object.keys(response.data || {}),
+        });
+        toast.error('Token not received from server. Please check backend response format.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!user || !user.id) {
+        console.warn('⚠️ User data incomplete:', user);
+        // Still try to proceed if we have token
+      }
+      
+      console.log('✅ Setting auth with:', { user, hasToken: !!token });
+      setAuth(user || { id: 'temp', phone: formData.phone }, token);
+      
+      // Set cookie for middleware authentication
+      document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      
       toast.success('Login successful!');
       
       // Check for redirect URL
       const redirectUrl = searchParams.get('redirect') || localStorage.getItem('redirectAfterLogin');
+      const finalUrl = redirectUrl || '/dashboard';
+      
       if (redirectUrl) {
         localStorage.removeItem('redirectAfterLogin');
-        router.push(redirectUrl);
-      } else {
-        router.push('/dashboard');
       }
+      
+      // Use window.location for immediate redirect to ensure state is updated
+      setTimeout(() => {
+        window.location.href = finalUrl;
+      }, 500);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
+      // Better error handling with detailed logging
+      console.error('❌ Login error details:', {
+        error,
+        message: error.message,
+        response: error.response,
+        request: error.request,
+        config: error.config,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+      });
+      
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error.response) {
+        // Server responded with error
+        const serverMessage = error.response.data?.message || error.response.data?.error || error.response.data?.msg;
+        errorMessage = serverMessage || `Server error: ${error.response.status} ${error.response.statusText}`;
+        console.error('❌ Server error response:', error.response.data);
+      } else if (error.request) {
+        // Request made but no response
+        errorMessage = 'Cannot connect to server. Please check your internet connection and backend URL.';
+        console.error('❌ No response received. Request:', error.request);
+      } else {
+        // Something else happened
+        errorMessage = error.message || errorMessage;
+        console.error('❌ Error setting up request:', error.message);
+      }
+      
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
@@ -67,13 +167,18 @@ export default function LoginPage() {
               Sign in to your account
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link href="/register" className="font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
                 Create one now
               </Link>
             </p>
           </div>
-          <form className="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-large border border-gray-200/50 dark:border-gray-700/50" onSubmit={handleSubmit}>
+          <form 
+            method="post" 
+            action="#" 
+            className="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-large border border-gray-200/50 dark:border-gray-700/50" 
+            onSubmit={handleSubmit}
+          >
             <div className="rounded-md shadow-sm -space-y-px">
               <div>
                 <label htmlFor="phone" className="sr-only">
@@ -221,6 +326,18 @@ export default function LoginPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
 

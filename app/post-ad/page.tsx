@@ -1,20 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useAuthStore } from '@/lib/store/authStore';
-import { adsApi, categoriesApi } from '@/lib/api';
+import { adsApi } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Upload, X, Mic, Play, Pause } from 'lucide-react';
 import Image from 'next/image';
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+const categories = [
+  'Vehicles', 'Property', 'Mobiles', 'Electronics', 'Fashion',
+  'Gaming', 'Sports', 'Books', 'Furniture', 'Watches', 'Cameras', 'Audio'
+];
 
 const conditions = ['New', 'Like New', 'Good', 'Fair', 'Poor'];
 
@@ -36,41 +35,12 @@ export default function PostAdPage() {
   const [voiceRecording, setVoiceRecording] = useState<File | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoadingCategories(true);
-        const response = await categoriesApi.getAll();
-        setCategories(response.data || []);
-      } catch (error) {
-        console.error('Failed to fetch categories:', error);
-        // Fallback to default categories
-        setCategories([
-          { id: '1', name: 'Vehicles', slug: 'vehicles' },
-          { id: '2', name: 'Property', slug: 'property' },
-          { id: '3', name: 'Mobiles', slug: 'mobiles' },
-          { id: '4', name: 'Electronics', slug: 'electronics' },
-          { id: '5', name: 'Fashion', slug: 'fashion' },
-          { id: '6', name: 'Gaming', slug: 'gaming' },
-          { id: '7', name: 'Sports', slug: 'sports' },
-          { id: '8', name: 'Books', slug: 'books' },
-          { id: '9', name: 'Furniture', slug: 'furniture' },
-        ]);
-      } finally {
-        setLoadingCategories(false);
-      }
-    };
-    fetchCategories();
-  }, []);
-
-  // Check authentication
-  if (typeof window !== 'undefined' && !isAuthenticated) {
-    router.push('/login');
-    return null;
-  }
+  // Removed authentication redirect - page accessible without login
+  // if (typeof window !== 'undefined' && !isAuthenticated) {
+  //   router.push('/login');
+  //   return null;
+  // }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -190,7 +160,7 @@ export default function PostAdPage() {
                         setImage(null);
                         setImagePreview(null);
                       }}
-                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      className="absolute top-2 right-2 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -334,15 +304,11 @@ export default function PostAdPage() {
                     required
                   >
                     <option value="">Select Category</option>
-                    {loadingCategories ? (
-                      <option disabled>Loading categories...</option>
-                    ) : (
-                      categories.map((cat) => (
-                        <option key={cat.id} value={cat.name}>
-                          {cat.name}
-                        </option>
-                      ))
-                    )}
+                    {categories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>

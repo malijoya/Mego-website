@@ -27,22 +27,6 @@ export default function DailyTasksPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [completing, setCompleting] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    fetchTasks();
-    
-    // Auto-refresh every 2 minutes (reduced frequency for better performance)
-    const interval = setInterval(() => {
-      fetchTasks();
-    }, 120000);
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
-
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
@@ -56,6 +40,27 @@ export default function DailyTasksPage() {
       setRefreshing(false);
     }
   }, []);
+
+  useEffect(() => {
+    // Removed authentication redirect - page accessible without login
+    let interval: NodeJS.Timeout;
+    
+    if (isAuthenticated) {
+      fetchTasks();
+      
+      // Auto-refresh every 2 minutes (reduced frequency for better performance)
+      interval = setInterval(() => {
+        fetchTasks();
+      }, 120000);
+    } else {
+      setLoading(false);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -78,7 +83,7 @@ export default function DailyTasksPage() {
     }
   };
 
-  if (!isAuthenticated || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>

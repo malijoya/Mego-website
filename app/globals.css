@@ -2,10 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   CSS Variables & Theme
+   ============================================ */
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --background-start-rgb: 255, 255, 255;
+  --background-end-rgb: 249, 250, 251;
 }
 
 .dark {
@@ -14,59 +17,101 @@
   --background-end-rgb: 17, 24, 39;
 }
 
-* {
+/* ============================================
+   Base Styles & Reset
+   ============================================ */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Performance optimizations */
-  will-change: scroll-position;
-  text-rendering: optimizeSpeed;
-  /* Fast interactions */
-  touch-action: manipulation;
-}
-
-/* Optimize rendering */
-* {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-}
-
-/* Performance optimization - contain layout and paint */
-.page-transition {
-  contain: layout style paint;
+  text-rendering: optimizeLegibility;
 }
 
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  height: 100%;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background-color: rgb(var(--background-start-rgb));
   font-feature-settings: 'kern' 1;
-  text-rendering: optimizeLegibility;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ============================================
+   Links & Interactive Elements
+   ============================================ */
 a {
   color: inherit;
   text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.2s ease, opacity 0.2s ease;
 }
 
-/* Custom scrollbar */
+a:hover {
+  opacity: 0.8;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Inputs & Form Elements */
+input,
+textarea,
+select {
+  cursor: text;
+  user-select: text;
+  -webkit-user-select: text;
+  touch-action: manipulation;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ============================================
+   Scrollbar Styles
+   ============================================ */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -98,40 +143,15 @@ a {
   background-clip: padding-box;
 }
 
-/* Loading spinner */
+/* ============================================
+   Animations & Keyframes
+   ============================================ */
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* Smooth transitions for all interactive elements - Optimized for performance */
-button, a, input, select, textarea {
-  transition: all 0.15s ease-out;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* Fast button clicks - no delay */
-button {
-  touch-action: manipulation;
-  -webkit-touch-callout: none;
-  will-change: transform;
-}
-
-button:active {
-  transform: scale(0.98);
-  transition: transform 0.05s;
-}
-
-/* Enhanced animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -194,7 +214,59 @@ button:active {
   }
 }
 
-/* Faster animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes pulse-glow-olx {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(226, 55, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(226, 55, 68, 0.8), 0 0 30px rgba(226, 55, 68, 0.4);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* ============================================
+   Animation Utilities
+   ============================================ */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
@@ -226,16 +298,72 @@ button:active {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Gradient text */
+.animate-float {
+  animation: float linear infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+/* Page Transitions */
+.page-transition {
+  contain: layout style paint;
+  animation: fadeInUp 0.2s ease-out;
+}
+
+/* Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, #0284c7 0%, #9333ea 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   font-weight: 700;
 }
 
-/* Enhanced card hover effect - Faster */
+.text-gradient {
+  background: linear-gradient(135deg, #0284c7 0%, #9333ea 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button Styles */
+.btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+  touch-action: manipulation;
+  will-change: transform;
+  cursor: pointer;
+  user-select: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(2, 132, 199, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  transition: transform 0.05s;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Card Hover Effects */
 .card-hover {
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   position: relative;
@@ -257,6 +385,7 @@ button:active {
     transparent
   );
   transition: left 0.5s;
+  pointer-events: none;
 }
 
 .card-hover:hover::before {
@@ -272,33 +401,7 @@ button:active {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
-/* Professional button styles - Fast & Responsive */
-.btn-primary {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
-  transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
-  touch-action: manipulation;
-  will-change: transform;
-  cursor: pointer;
-  user-select: none;
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 18px rgba(2, 132, 199, 0.35);
-}
-
-.btn-primary:active {
-  transform: translateY(0) scale(0.98);
-  transition: transform 0.05s;
-}
-
-/* Page transition - Faster */
-.page-transition {
-  animation: fadeInUp 0.2s ease-out;
-}
-
-/* Skeleton loading */
+/* Skeleton Loading */
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -308,6 +411,7 @@ button:active {
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+  border-radius: 0.5rem;
 }
 
 .dark .skeleton {
@@ -320,24 +424,7 @@ button:active {
   background-size: 200% 100%;
 }
 
-/* Focus styles */
-*:focus-visible {
-  outline: 2px solid #0284c7;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Selection styles */
-::selection {
-  background-color: rgba(2, 132, 199, 0.3);
-  color: inherit;
-}
-
-.dark ::selection {
-  background-color: rgba(2, 132, 199, 0.5);
-}
-
-/* Glass morphism effect */
+/* Glass Morphism */
 .glass {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -350,92 +437,6 @@ button:active {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Smooth gradient backgrounds */
-.gradient-bg {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.gradient-bg-primary {
-  background: linear-gradient(135deg, #0284c7 0%, #9333ea 100%);
-}
-
-/* Text gradient */
-.text-gradient {
-  background: linear-gradient(135deg, #0284c7 0%, #9333ea 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Hide scrollbar */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Floating animation for particles */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) translateX(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(-100vh) translateX(20px);
-    opacity: 0;
-  }
-}
-
-.animate-float {
-  animation: float linear infinite;
-}
-
-/* Gradient animation */
-@keyframes gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 3s ease infinite;
-}
-
-/* Pulse slow animation */
-@keyframes pulse-slow {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 4s ease-in-out infinite;
-}
-
-/* Enhanced shadow utilities */
-.shadow-3xl {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-/* Glass morphism enhancement */
 .glass-enhanced {
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(20px) saturate(180%);
@@ -449,6 +450,70 @@ button:active {
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+/* Gradient Backgrounds */
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
 
+.gradient-bg-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #9333ea 100%);
+}
 
+/* Scrollbar Hide */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Shadow Utilities */
+.shadow-3xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Focus Styles */
+*:focus-visible {
+  outline: 2px solid #0284c7;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Selection Styles */
+::selection {
+  background-color: rgba(2, 132, 199, 0.3);
+  color: inherit;
+}
+
+.dark ::selection {
+  background-color: rgba(2, 132, 199, 0.5);
+}
+
+/* Image Styles */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================
+   Responsive Utilities
+   ============================================ */
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+  
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+}

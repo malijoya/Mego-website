@@ -30,7 +30,7 @@ export function FeaturedCategories() {
             Browse by Category
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Find exactly what you're looking for
+            Find exactly what you&apos;re looking for
           </p>
         </div>
 

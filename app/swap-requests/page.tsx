@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -42,23 +42,11 @@ export default function SwapRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
+  const fetchRequests = useCallback(async () => {
     if (!isAuthenticated) {
-      router.push('/login');
+      setLoading(false);
       return;
     }
-
-    fetchRequests();
-    
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchRequests();
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
-
-  const fetchRequests = async () => {
     try {
       setLoading(true);
       // Use getForMyAds to get swap requests for user's ads (like mobile app)
@@ -80,7 +68,26 @@ export default function SwapRequestsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isAuthenticated) {
+      fetchRequests();
+      
+      // Auto-refresh every 30 seconds
+      interval = setInterval(() => {
+        fetchRequests();
+      }, 30000);
+    } else {
+      setLoading(false);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAuthenticated, fetchRequests]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -314,7 +321,7 @@ export default function SwapRequestsPage() {
                         <>
                           <button
                             onClick={() => handleReject(request.id)}
-                            className="px-6 py-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center space-x-2 font-semibold"
+                            className="px-6 py-3 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-lg hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors flex items-center space-x-2 font-semibold"
                           >
                             <X className="w-5 h-5" />
                             <span>Reject</span>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -571,7 +571,7 @@ export default function AdDetailPage() {
                   </div>
                 ) : myAds.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">You don't have any active ads</p>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">You don&apos;t have any active ads</p>
                     <Link
                       href="/post-ad"
                       className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
@@ -709,7 +709,7 @@ export default function AdDetailPage() {
                   <button
                     onClick={handleSubmitReport}
                     disabled={!reportReason.trim() || submittingReport}
-                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+                    className="flex-1 px-4 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
                   >
                     {submittingReport ? (
                       <>

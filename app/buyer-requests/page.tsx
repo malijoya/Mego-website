@@ -45,10 +45,16 @@ export default function BuyerRequestsPage() {
     fetchRequests();
   }, []);
 
-  if (!isAuthenticated) {
-    router.push('/login');
-    return null;
-  }
+  // Removed authentication redirect - page accessible without login
+  // useEffect(() => {
+  //   if (!isAuthenticated) {
+  //     router.push('/login');
+  //   }
+  // }, [isAuthenticated, router]);
+
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

@@ -34,7 +34,7 @@ export function FeaturedAds() {
     }
   );
 
-  const ads = adsData || [];
+  const ads: Ad[] = adsData || [];
   const loading = isLoading;
 
   // Memoize formatters to prevent re-creation on each render
@@ -47,6 +47,7 @@ export function FeaturedAds() {
   }, []);
 
   const formatDate = useCallback((dateString: string) => {
+    if (typeof window === 'undefined') return '';
     const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -75,7 +76,7 @@ export function FeaturedAds() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-12 animate-fadeInUp">
           <div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
               Featured Listings
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -92,7 +93,7 @@ export function FeaturedAds() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {ads.map((ad, index) => (
+          {ads.map((ad: Ad, index: number) => (
             <Link
               key={ad.id}
               href={`/ads/${ad.id}`}

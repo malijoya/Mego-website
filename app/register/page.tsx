@@ -26,6 +26,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
@@ -37,19 +38,121 @@ export default function RegisterPage() {
       return;
     }
 
+    // Validate required fields
+    if (!formData.name || !formData.phone || !formData.email || !formData.password) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { confirmPassword, ...signupData } = formData;
-      const response = await authApi.signup(signupData);
-      const { token, ...user } = response.data;
       
-      setAuth(user, token);
+      // Log for debugging - always log in dev
+      console.log('🔵 Signup attempt:', {
+        url: `${process.env.NEXT_PUBLIC_API_URL || 'http://3.236.171.71'}/v1/auth/signup`,
+        data: { ...signupData, password: '***' }
+      });
+      
+      const response = await authApi.signup(signupData);
+      
+      console.log('🟢 Signup response:', response);
+      console.log('🟢 Response data:', response?.data);
+      console.log('🟢 Response status:', response?.status);
+      
+      // Check if response has data
+      if (!response || !response.data) {
+        console.error('❌ No response data:', response);
+        toast.error('Invalid response from server');
+        setLoading(false);
+        return;
+      }
+      
+      // Handle different response formats
+      let token: string | null = null;
+      let user: any = null;
+      
+      // Try different response formats
+      if (response.data.token) {
+        // Format 1: { token: "...", ...user }
+        token = response.data.token;
+        const { token: _, ...userData } = response.data;
+        user = userData;
+      } else if (response.data.data?.token) {
+        // Format 2: { data: { token: "...", ...user } }
+        token = response.data.data.token;
+        const { token: _, ...userData } = response.data.data;
+        user = userData;
+      } else if (response.data.user && response.data.token) {
+        // Format 3: { user: {...}, token: "..." }
+        token = response.data.token;
+        user = response.data.user;
+      } else {
+        // Try to extract token from any nested structure
+        console.warn('⚠️ Unexpected response format, trying to extract token...');
+        token = response.data.token || response.data.accessToken || response.data.access_token || null;
+        user = response.data.user || response.data.data || response.data;
+      }
+      
+      if (!token) {
+        console.error('❌ No token found in response:', {
+          responseData: response.data,
+          keys: Object.keys(response.data || {}),
+        });
+        toast.error('Token not received from server. Please check backend response format.');
+        setLoading(false);
+        return;
+      }
+      
+      if (!user || !user.id) {
+        console.warn('⚠️ User data incomplete:', user);
+        // Still try to proceed if we have token
+      }
+      
+      console.log('✅ Setting auth with:', { user, hasToken: !!token });
+      setAuth(user || { id: 'temp', name: signupData.name, phone: signupData.phone, email: signupData.email }, token);
+      
+      // Set cookie for middleware authentication
+      document.cookie = `token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      
       toast.success('Account created successfully!');
-      router.push('/dashboard');
+      
+      // Use window.location for immediate redirect to ensure state is updated
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 500);
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
-    } finally {
+      // Better error handling with detailed logging
+      console.error('❌ Signup error details:', {
+        error,
+        message: error.message,
+        response: error.response,
+        request: error.request,
+        config: error.config,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+      });
+      
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (error.response) {
+        // Server responded with error
+        const serverMessage = error.response.data?.message || error.response.data?.error || error.response.data?.msg;
+        errorMessage = serverMessage || `Server error: ${error.response.status} ${error.response.statusText}`;
+        console.error('❌ Server error response:', error.response.data);
+      } else if (error.request) {
+        // Request made but no response
+        errorMessage = 'Cannot connect to server. Please check your internet connection and backend URL.';
+        console.error('❌ No response received. Request:', error.request);
+      } else {
+        // Something else happened
+        errorMessage = error.message || errorMessage;
+        console.error('❌ Error setting up request:', error.message);
+      }
+      
+      toast.error(errorMessage);
       setLoading(false);
     }
   };
@@ -73,7 +176,12 @@ export default function RegisterPage() {
               </Link>
             </p>
           </div>
-          <form className="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-large border border-gray-200/50 dark:border-gray-700/50" onSubmit={handleSubmit}>
+          <form 
+            method="post" 
+            action="#" 
+            className="mt-8 space-y-6 bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-large border border-gray-200/50 dark:border-gray-700/50" 
+            onSubmit={handleSubmit}
+          >
             <div className="space-y-4">
               <div>
                 <label htmlFor="name" className="sr-only">

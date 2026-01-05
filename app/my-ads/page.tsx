@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -32,23 +32,36 @@ export default function MyAdsPage() {
   const [activeTab, setActiveTab] = useState<'Active' | 'Pending' | 'Rejected' | 'Sold' | 'All'>('Active');
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
+
+    let interval: NodeJS.Timeout;
+    
+    if (isAuthenticated) {
+      fetchAds();
+      
+      // Auto-refresh every 30 seconds
+      interval = setInterval(() => {
+        fetchAds();
+      }, 30000);
+    } else {
+      setLoading(false);
     }
 
-    fetchAds();
-    
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(() => {
-      fetchAds();
-    }, 30000);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isAuthenticated, fetchAds]);
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
-
-  const fetchAds = async () => {
+  const fetchAds = useCallback(async () => {
     try {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       const response = await adsApi.getMyAds();
       setAds(response.data || []);
@@ -58,7 +71,7 @@ export default function MyAdsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [isAuthenticated]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -316,7 +329,7 @@ export default function MyAdsPage() {
                       e.stopPropagation();
                       handleDelete(ad.id);
                     }}
-                    className="flex-1 flex items-center justify-center space-x-1 py-2 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 rounded text-sm font-medium transition-colors"
+                    className="flex-1 flex items-center justify-center space-x-1 py-2 bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-600 dark:text-primary-400 rounded text-sm font-medium transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>Delete</span>

@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Search, Plus, User, Bell, Moon, Sun, Menu, X, LogOut, Settings, Wallet, Gift, Users, ArrowLeftRight, Star, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/authStore';
 import { useThemeStore } from '@/lib/store/themeStore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getImageUrl } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
@@ -16,6 +17,12 @@ export function Header() {
   const { darkMode, toggleDarkMode } = useThemeStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted before using theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -24,19 +31,25 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-800/50 shadow-soft">
+    <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-800/50 shadow-soft" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group animate-fadeIn">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-xl flex items-center justify-center shadow-glow group-hover:scale-110 transition-transform duration-300">
-              <span className="text-white font-bold text-xl">M</span>
+          <Link href="/" className="flex items-center group" suppressHydrationWarning>
+            <div className="relative h-10 w-[120px] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <Image
+                src="/images/mego-logo.png"
+                alt="MEGO Logo"
+                width={120}
+                height={40}
+                className="h-full w-auto object-contain"
+                priority
+              />
             </div>
-            <span className="text-xl font-bold gradient-text hidden sm:block group-hover:scale-105 transition-transform duration-300">MEGO</span>
           </Link>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-8 animate-slideInRight">
+          <div className="hidden md:flex flex-1 max-w-2xl mx-8">
             <div className="relative w-full group">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-primary-500 transition-colors" />
               <input
@@ -49,7 +62,7 @@ export function Header() {
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center space-x-3 animate-fadeIn">
+          <div className="flex items-center space-x-3">
             {/* Post Ad Button */}
             <Link
               href="/post-ad"
@@ -59,14 +72,20 @@ export function Header() {
               <span>Post Ad</span>
             </Link>
 
-            {/* Theme Toggle */}
+            {/* Theme Toggle - Night/Day Mode Button */}
             <button
               onClick={toggleDarkMode}
               className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all hover:scale-110 active:scale-95"
               aria-label="Toggle dark mode"
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              suppressHydrationWarning
             >
-              {darkMode ? (
-                <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform duration-300" />
+              {mounted ? (
+                darkMode ? (
+                  <Sun className="w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform duration-300" />
+                ) : (
+                  <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform duration-300" />
+                )
               ) : (
                 <Moon className="w-5 h-5 text-gray-600 dark:text-gray-300 transition-transform duration-300" />
               )}
@@ -89,16 +108,16 @@ export function Header() {
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                     className="flex items-center space-x-2 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all hover:scale-105 active:scale-95 ring-2 ring-transparent hover:ring-primary-500/20"
                   >
-                    {user?.profileImage ? (
+                    {mounted && user?.profileImage ? (
                       <img
                         src={getImageUrl(user.profileImage)}
-                        alt={user.name}
+                        alt={user?.name || 'User'}
                         className="w-9 h-9 rounded-full object-cover ring-2 ring-primary-500/20"
                       />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center shadow-glow">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center">
                         <span className="text-white text-sm font-semibold">
-                          {user?.name?.charAt(0).toUpperCase()}
+                          {mounted && user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                         </span>
                       </div>
                     )}
@@ -111,7 +130,7 @@ export function Header() {
                         className="fixed inset-0 z-10 animate-fadeIn"
                         onClick={() => setUserMenuOpen(false)}
                       />
-                      <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-large border border-gray-200/50 dark:border-gray-700/50 py-2 z-20 animate-scaleIn backdrop-blur-md">
+                      <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-large border border-gray-200/50 dark:border-gray-700/50 py-2 z-20 backdrop-blur-md">
                         <Link
                           href="/profile"
                           className="flex items-center space-x-3 px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all rounded-lg mx-2"
@@ -179,7 +198,7 @@ export function Header() {
                         <hr className="my-2 border-gray-200 dark:border-gray-700" />
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400"
+                          className="w-full flex items-center space-x-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-primary-600 dark:text-primary-400"
                         >
                           <LogOut className="w-4 h-4" />
                           <span>Logout</span>
@@ -221,7 +240,7 @@ export function Header() {
         </div>
 
         {/* Mobile Search */}
-        <div className="md:hidden pb-4 animate-fadeIn">
+        <div className="md:hidden pb-4">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input

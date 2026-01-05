@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -45,7 +45,7 @@ interface Message {
   voiceUrl?: string;
 }
 
-export default function MessagesPage() {
+function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
@@ -77,12 +77,17 @@ export default function MessagesPage() {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
 
     const fetchConversations = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
       try {
         const response = await messagesApi.getConversations();
         const conversationsList = response.data || [];
@@ -119,8 +124,13 @@ export default function MessagesPage() {
       }
     };
 
-    fetchConversations();
-  }, [isAuthenticated, router, searchParams]);
+    // Only fetch if authenticated, otherwise set loading to false immediately
+    if (isAuthenticated) {
+      fetchConversations();
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated, searchParams, selectedConversation]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -170,7 +180,7 @@ export default function MessagesPage() {
 
   const selectedConv = conversations.find((c) => c.id === selectedConversation);
 
-  if (!isAuthenticated || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
@@ -405,6 +415,18 @@ export default function MessagesPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      </div>
+    }>
+      <MessagesContent />
+    </Suspense>
   );
 }
 

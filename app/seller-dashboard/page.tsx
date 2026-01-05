@@ -33,12 +33,17 @@ export default function SellerDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
 
     const fetchData = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
       try {
         const adsResponse = await adsApi.getMyAds();
         setAds(adsResponse.data || []);
@@ -87,9 +92,9 @@ export default function SellerDashboardPage() {
     };
 
     fetchData();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
-  if (!isAuthenticated || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>

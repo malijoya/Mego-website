@@ -1,8 +1,15 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://52.0.49.49';
+// API Configuration
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ; //|| 'http://3.236.171.71'
 const API_VERSION = 'v1';
 const FULL_API_URL = `${API_BASE_URL}/${API_VERSION}`;
+
+// Log API URL in development
+if (typeof window !== 'undefined') {
+  console.log('🔗 API Base URL:', API_BASE_URL);
+  console.log('🔗 Full API URL:', FULL_API_URL);
+}
 
 // Create axios instance with performance optimizations
 const api = axios.create({
@@ -22,23 +29,63 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
+      
+      // Log request in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📤 API Request:', {
+          method: config.method?.toUpperCase(),
+          url: config.url,
+          fullURL: (config.baseURL || '') + (config.url || ''),
+          data: config.data,
+        });
+      }
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('❌ Request interceptor error:', error);
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Log successful response in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📥 API Response:', {
+        url: response.config?.url,
+        status: response.status,
+        data: response.data,
+      });
+    }
+    return response;
+  },
   (error) => {
+    // Enhanced error logging for debugging - always log errors
+    console.error('❌ API Error:', {
+      url: error.config?.url,
+      fullURL: (error.config?.baseURL || '') + (error.config?.url || ''),
+      method: error.config?.method,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      code: error.code,
+      requestData: error.config?.data,
+    });
+    
     if (error.response?.status === 401) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+          window.location.href = '/login';
+        }
       }
     }
+    
     return Promise.reject(error);
   }
 );
@@ -60,10 +107,10 @@ export const authApi = {
     api.post('/auth/google', data),
   facebookAuth: (data: { accessToken: string }) =>
     api.post('/auth/facebook', data),
-  sendEmailOtp: (data: { email: string }) =>
-    api.post('/auth/send-email-otp', data),
-  verifyEmailOtp: (data: { email: string; code: string }) =>
-    api.post('/auth/verify-email-otp', data),
+  // sendEmailOtp: (data: { email: string }) =>
+  //   api.post('/auth/send-email-otp', data),
+  // verifyEmailOtp: (data: { email: string; code: string }) =>
+  //   api.post('/auth/verify-email-otp', data),
   getProfile: () => api.get('/auth/me'),
   updateProfile: (data: FormData) =>
     api.put('/auth/update-profile', data, {
@@ -187,6 +234,10 @@ export const messagesApi = {
     }),
   markAsRead: (conversationId: string, messageId: string) =>
     api.post(`/messages/${conversationId}/read/${messageId}`),
+  deleteMessage: (conversationId: string, messageId: string) =>
+    api.delete(`/messages/${conversationId}/${messageId}`),
+  deleteConversation: (conversationId: string) =>
+    api.delete(`/messages/conversation/${conversationId}`),
 };
 
 // Support API

@@ -7,7 +7,7 @@
 
 const axios = require('axios');
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://52.0.49.49';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5144';
 const API_VERSION = 'v1';
 const FULL_API_URL = `${API_BASE_URL}/${API_VERSION}`;
 

@@ -31,12 +31,17 @@ export default function RecentlyViewedPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
 
     const fetchItems = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
       try {
         const response = await recentlyViewedApi.getAll();
         setItems(response.data || []);
@@ -48,7 +53,7 @@ export default function RecentlyViewedPage() {
     };
 
     fetchItems();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-PK', {
@@ -71,7 +76,7 @@ export default function RecentlyViewedPage() {
     return `${days} days ago`;
   };
 
-  if (!isAuthenticated || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>

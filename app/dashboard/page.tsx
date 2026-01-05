@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useAuthStore } from '@/lib/store/authStore';
-import { adsApi, getImageUrl, loyaltyApi, notificationsApi, categoriesApi } from '@/lib/api';
-import { Search, Heart, Eye, MapPin, Filter, RefreshCw, Star, Gift, Zap, TrendingUp, Package } from 'lucide-react';
+import { adsApi, getImageUrl, loyaltyApi, notificationsApi } from '@/lib/api';
+import { Search, Heart, Eye, MapPin, Filter, RefreshCw, Star, Gift, Zap, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
@@ -25,12 +25,18 @@ interface Ad {
   media?: Array<{ filePath: string; mediaUrl?: string }>;
 }
 
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  adCount?: number;
-}
+const categories = [
+  { id: 'all', name: 'All', icon: '📦' },
+  { id: 'Vehicles', name: 'Vehicles', icon: '🚗' },
+  { id: 'Property', name: 'Property', icon: '🏠' },
+  { id: 'Mobiles', name: 'Mobiles', icon: '📱' },
+  { id: 'Electronics', name: 'Electronics', icon: '💻' },
+  { id: 'Fashion', name: 'Fashion', icon: '👕' },
+  { id: 'Gaming', name: 'Gaming', icon: '🎮' },
+  { id: 'Sports', name: 'Sports', icon: '⚽' },
+  { id: 'Books', name: 'Books', icon: '📚' },
+  { id: 'Furniture', name: 'Furniture', icon: '🛋️' },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -45,57 +51,30 @@ export default function DashboardPage() {
   const [favoritesIds, setFavoritesIds] = useState<Set<number>>(new Set());
   const featuredScrollRef = useRef<HTMLDivElement>(null);
   const [featuredIndex, setFeaturedIndex] = useState(0);
-  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-
-    fetchData();
-    fetchCategories();
+    // Removed authentication redirect - page accessible without login
+    let interval: NodeJS.Timeout;
+    
+    const loadData = async () => {
+      await fetchData();
+      if (isAuthenticated) {
     giveDailyLoginReward();
+      }
     
     // Auto-refresh every 30 seconds
-    const interval = setInterval(() => {
+      interval = setInterval(() => {
       fetchData();
     }, 30000);
+    };
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated, router]);
+    loadData();
 
-  const fetchCategories = async () => {
-    try {
-      const response = await categoriesApi.getAll();
-      const cats = response.data || [];
-      // Add "All" category at the beginning
-      setCategories([
-        { id: 'all', name: 'All', slug: 'all', adCount: ads.length },
-        ...cats.map((cat: any) => ({
-          id: cat.id || cat.name,
-          name: cat.name,
-          slug: cat.slug || cat.name.toLowerCase(),
-          adCount: cat.adCount || 0,
-        })),
-      ]);
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-      // Fallback to default categories
-      setCategories([
-        { id: 'all', name: 'All', slug: 'all' },
-        { id: 'Vehicles', name: 'Vehicles', slug: 'vehicles' },
-        { id: 'Property', name: 'Property', slug: 'property' },
-        { id: 'Mobiles', name: 'Mobiles', slug: 'mobiles' },
-        { id: 'Electronics', name: 'Electronics', slug: 'electronics' },
-        { id: 'Fashion', name: 'Fashion', slug: 'fashion' },
-        { id: 'Gaming', name: 'Gaming', slug: 'gaming' },
-        { id: 'Sports', name: 'Sports', slug: 'sports' },
-        { id: 'Books', name: 'Books', slug: 'books' },
-        { id: 'Furniture', name: 'Furniture', slug: 'furniture' },
-      ]);
-    }
-  };
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   // Featured ads carousel auto-scroll
   useEffect(() => {
@@ -113,7 +92,7 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [featuredAds, featuredIndex]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [adsResponse, notificationsResponse] = await Promise.all([
@@ -133,21 +112,13 @@ export default function DashboardPage() {
       setNotificationCount(
         notificationsResponse.data.filter((n: any) => !n.isRead).length
       );
-
-      // Load favorites
-      try {
-        const favResponse = await adsApi.getAll(); // We'll get favorites separately if needed
-        // For now, we'll track favorites when user interacts
-      } catch (error) {
-        // Silent fail
-      }
     } catch (error) {
       toast.error('Failed to load ads');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -181,8 +152,9 @@ export default function DashboardPage() {
     }).format(price);
   };
 
-  // Filter ads
-  const filteredAds = ads.filter((ad) => {
+  // Filter ads - memoized for performance
+  const filteredAds = useMemo(() => {
+    return ads.filter((ad) => {
     const matchesSearch =
       !searchQuery ||
       ad.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -194,8 +166,9 @@ export default function DashboardPage() {
     
     return matchesSearch && matchesCategory;
   });
+  }, [ads, searchQuery, activeCategory]);
 
-  if (!isAuthenticated || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
@@ -311,31 +284,20 @@ export default function DashboardPage() {
 
           {/* Category Filter */}
           <div className="flex items-center space-x-3 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.length > 0 ? (
-              categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`px-5 py-2.5 rounded-xl font-semibold whitespace-nowrap transition-all ${
-                    activeCategory === cat.id
-                      ? 'bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow-glow scale-105'
-                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 hover:scale-105 active:scale-95'
-                  }`}
-                >
-                  {cat.id === 'all' && <Package className="w-4 h-4 inline mr-2" />}
-                  {cat.name}
-                  {cat.adCount !== undefined && cat.id !== 'all' && (
-                    <span className="ml-2 text-xs opacity-75">({cat.adCount})</span>
-                  )}
-                </button>
-              ))
-            ) : (
-              <div className="flex space-x-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-10 w-20 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-                ))}
-              </div>
-            )}
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-5 py-2.5 rounded-xl font-semibold whitespace-nowrap transition-all ${
+                  activeCategory === cat.id
+                    ? 'bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow-glow scale-105'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 hover:scale-105 active:scale-95'
+                }`}
+              >
+                <span className="mr-2 text-lg">{cat.icon}</span>
+                {cat.name}
+              </button>
+            ))}
           </div>
         </div>
 

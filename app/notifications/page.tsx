@@ -26,12 +26,17 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
 
     const fetchNotifications = async () => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
+      }
       try {
         const response = await notificationsApi.getAll();
         setNotifications(response.data || []);
@@ -43,7 +48,7 @@ export default function NotificationsPage() {
     };
 
     fetchNotifications();
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
   const handleMarkAsRead = async (id: string) => {
     try {

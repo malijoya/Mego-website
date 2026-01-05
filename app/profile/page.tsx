@@ -59,13 +59,18 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
+    // Removed authentication redirect - page accessible without login
+    // if (!isAuthenticated) {
+    //   router.push('/login');
+    //   return;
+    // }
 
+    if (isAuthenticated) {
     fetchUser();
-  }, [isAuthenticated, router]);
+    } else {
+      setLoading(false);
+    }
+  }, [isAuthenticated]);
 
   const fetchUser = async () => {
     try {
@@ -92,7 +97,10 @@ export default function ProfilePage() {
       formData.append('Image', file);
 
       const response = await authApi.updateProfile(formData);
-      setUser((prev) => ({ ...prev, profileImage: response.data.profileImage }));
+      setUser((prev) => {
+        if (!prev) return null;
+        return { ...prev, profileImage: response.data.profileImage };
+      });
       toast.success('Profile picture updated!');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update profile picture');
@@ -109,7 +117,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (!isAuthenticated || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
@@ -266,7 +274,7 @@ export default function ProfilePage() {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center space-x-2 px-6 py-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
+          className="w-full flex items-center justify-center space-x-2 px-6 py-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors font-semibold"
         >
           <LogOut className="w-5 h-5" />
           <span>Logout</span>
